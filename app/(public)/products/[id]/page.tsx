@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Tag } from "lucide-react";
 import { getProductById, getRelatedProducts } from "@/lib/products";
 import { formatImageUrl, getWhatsAppUrl } from "@/lib/utils";
+import { ProductCard } from "@/components/ProductCard";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -169,37 +170,10 @@ export default async function ProductDetailPage({ params }: Props) {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {related.map((p) => {
-                const rImg = formatImageUrl(p.img);
-                const rSigned = rImg.includes("/sign/");
-                return (
-                  <Link
-                    key={p.id}
-                    href={`/products/${p.id}`}
-                    className="group border border-[#040316]/8 overflow-hidden product-card bg-white"
-                  >
-                    <div className="relative aspect-square bg-[#f8f8f8]">
-                      <Image
-                        src={rImg}
-                        alt={p.name}
-                        fill
-                        className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                        sizes="25vw"
-                        unoptimized={rSigned}
-                      />
-                    </div>
-                    <div className="p-3">
-                      <p className="text-[10px] text-[#ED3E00] font-semibold uppercase tracking-wider">
-                        {p.category}
-                      </p>
-                      <p className="text-xs font-bold text-[#040316] mt-0.5 line-clamp-2">
-                        {p.name}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+              {related.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
           </div>
         )}

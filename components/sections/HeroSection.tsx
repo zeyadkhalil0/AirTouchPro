@@ -6,19 +6,19 @@ import Image from "next/image";
 import { ArrowDown, ChevronRight } from "lucide-react";
 
 const HERO_IMAGES = [
-  "/images/desktop-hero1.webp",
-  "/images/desktop-hero2.webp",
-  "/images/desktop-hero3.webp",
-  "/images/desktop-hero4.webp",
-  "/images/desktop-hero5.webp",
+  "/desktop-hero1.webp",
+  "/desktop-hero2.webp",
+  "/desktop-hero3.webp",
+  "/desktop-hero4.webp",
+  "/desktop-hero5.webp",
 ];
 
 const MOBILE_HERO_IMAGES = [
-  "/images/mobile-hero-1.webp",
-  "/images/mobile-hero-2.webp",
-  "/images/mobile-hero-3.webp",
-  "/images/mobile-hero-4.webp",
-  "/images/mobile-hero-5.webp",
+  "/mobile-hero-1.webp",
+  "/mobile-hero-2.webp",
+  "/mobile-hero-3.webp",
+  "/mobile-hero-4.webp",
+  "/mobile-hero-5.webp",
 ];
 
 export default function HeroSection() {

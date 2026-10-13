@@ -1,114 +1,33 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Search, X, SlidersHorizontal } from "lucide-react";
-import { cn, formatImageUrl, getWhatsAppUrl } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
+import { Search, X, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/client";
 import type { Product } from "@/types";
 import { PRODUCT_CATEGORIES } from "@/lib/constants";
+import { ProductCard, ProductSkeleton } from "@/components/ProductCard";
 
-/* ─── Product Card ─────────────────────────────────────────────── */
-function ProductCard({ product }: { product: Product }) {
-  const imgSrc = formatImageUrl(product.img);
-  const [imgError, setImgError] = useState(false);
-
-  const badgeStyle =
-    product.badge === "Premium"
-      ? "bg-[#040316] text-white"
-      : product.badge === "Hot"
-      ? "bg-[#ED3E00] text-white"
-      : product.badge === "New"
-      ? "bg-[#00A8ED] text-white"
-      : "bg-[#ffeb20] text-[#040316]";
-
-  return (
-    <div className="product-card bg-white border border-[#040316]/8 rounded-2xl overflow-hidden group flex flex-col shadow-sm hover:shadow-md">
-      {/* Image */}
-      <div className="relative aspect-square bg-[#f8f8f8] overflow-hidden flex-shrink-0">
-        <Image
-          src={imgError || !imgSrc ? "/images/logo.webp" : imgSrc}
-          alt={product.name}
-          fill
-          className="object-contain p-3 group-hover:scale-105 transition-transform duration-500"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          onError={() => setImgError(true)}
-          unoptimized={imgSrc.includes("/sign/")}
-        />
-        {product.badge && (
-          <span
-            className={cn(
-              "absolute top-2.5 left-2.5 text-[10px] font-bold px-2.5 py-0.5 rounded-md tracking-wider uppercase shadow-xs",
-              badgeStyle
-            )}
-          >
-            {product.badge}
-          </span>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="p-4 flex flex-col flex-1">
-        <span className="text-[10px] font-bold text-[#ED3E00] tracking-widest uppercase">
-          {product.category}
-        </span>
-        <h3 className="mt-1 font-bold text-[#040316] text-sm leading-snug line-clamp-2 flex-1">
-          {product.name}
-        </h3>
-        {product.description && (
-          <p className="mt-1.5 text-xs text-[#040316]/45 line-clamp-2 leading-relaxed">
-            {product.description}
-          </p>
-        )}
-
-        <div className="mt-3 pt-3 border-t border-[#040316]/5 flex items-center justify-between">
-          <Link
-            href={`/products/${product.id}`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#040316] hover:text-[#ED3E00] transition-colors"
-          >
-            View Details
-            <span className="bg-[#040316] text-[#ffeb20] px-1.5 py-0.5 rounded-md text-[10px] leading-none">
-              →
-            </span>
-          </Link>
-          <a
-            href={getWhatsAppUrl(`مرحباً، أود الاستفسار عن المنتج: ${product.name}`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-[#040316]/30 hover:text-[#25D366] transition-colors font-medium px-2 py-1 rounded-md hover:bg-black/5"
-          >
-            Inquire
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Skeleton ─────────────────────────────────────────────────── */
-function ProductSkeleton() {
-  return (
-    <div className="bg-white border border-[#040316]/8 rounded-2xl overflow-hidden animate-pulse">
-      <div className="aspect-square bg-gray-100" />
-      <div className="p-4 space-y-2.5">
-        <div className="h-2.5 bg-gray-100 w-1/3 rounded-md" />
-        <div className="h-4 bg-gray-100 w-3/4 rounded-md" />
-        <div className="h-3 bg-gray-100 w-full rounded-md" />
-        <div className="h-3 bg-gray-100 w-2/3 rounded-md" />
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main Component ───────────────────────────────────────────── */
 export default function ProductsClient() {
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get("category");
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Sync category from URL param if present
+  useEffect(() => {
+    if (initialCategory) {
+      // Decode if needed and match against valid categories
+      const decoded = decodeURIComponent(initialCategory);
+      setActiveCategory(decoded);
+    }
+  }, [initialCategory]);
 
   const loadProducts = useCallback(async (indicateLoading = true) => {
     if (indicateLoading) setLoading(true);
@@ -120,7 +39,7 @@ export default function ProductsClient() {
 
     if (supaErr) {
       console.error("Supabase error:", supaErr);
-      setError("Failed to load products. Please try again.");
+      setError("Failed to load products. Please check your connection and try again.");
     } else {
       setProducts(data ?? []);
     }
@@ -138,7 +57,7 @@ export default function ProductsClient() {
       if (!active) return;
       if (supaErr) {
         console.error("Supabase error:", supaErr);
-        setError("Failed to load products. Please try again.");
+        setError("Failed to load products. Please check your connection and try again.");
       } else {
         setProducts(data ?? []);
       }
@@ -176,138 +95,189 @@ export default function ProductsClient() {
     );
   }, [products]);
 
+  // Count items per category
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: products.length };
+    products.forEach((p) => {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    });
+    return counts;
+  }, [products]);
+
+  const resetAllFilters = () => {
+    setActiveCategory("All");
+    setSearchQuery("");
+  };
+
   return (
     <>
       {/* ── Sticky Filter Bar ── */}
-      <div className="border-b border-[#040316]/5 bg-[#fbfbfe] sticky top-16 md:top-20 z-30 shadow-sm">
+      <div className="border-b border-[#040316]/8 bg-[#fbfbfe]/95 backdrop-blur-md sticky top-16 md:top-20 z-30 shadow-2xs">
         <div className="container-max">
-          {/* Mobile: toggle */}
-          <div className="flex items-center justify-between py-3 md:hidden">
-            <p className="text-xs text-[#040316]/50">
+          {/* Mobile: Toggle and Count */}
+          <div className="flex items-center justify-between py-3 md:hidden ">
+            <p className="text-xs text-[#040316]/60">
               {loading
-                ? "Loading..."
+                ? "Loading products..."
                 : `${filtered.length} product${filtered.length !== 1 ? "s" : ""}`}
               {activeCategory !== "All" && (
-                <span className="ml-1 text-[#040316] font-semibold">
+                <span className="ml-1 text-[#040316] font-bold">
                   in {activeCategory}
                 </span>
               )}
             </p>
             <button
               onClick={() => setShowFilters((v) => !v)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#040316] border border-[#040316]/15 rounded-lg px-3 py-1.5 hover:bg-black/5 transition-colors"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#040316] border border-[#040316]/15 rounded-xl px-3 py-1.5 hover:bg-black/5 transition-colors focus:outline-hidden cursor-pointer"
+              aria-label="Toggle category filters"
             >
-              <SlidersHorizontal size={12} />
-              Filters
+              <SlidersHorizontal size={13} />
+              <span>Filters</span>
               {activeCategory !== "All" && (
-                <span className="w-4 h-4 rounded-full bg-[#ED3E00] text-white text-[9px] flex items-center justify-center">
+                <span className="w-4 h-4 rounded-full bg-[#ED3E00] text-white text-[9px] font-bold flex items-center justify-center">
                   1
                 </span>
               )}
             </button>
           </div>
 
-          {/* Desktop: always visible; Mobile: collapsible */}
+          {/* Desktop Categories / Mobile Collapsible */}
           <div
             className={cn(
               "overflow-x-auto scrollbar-none transition-all duration-200",
               showFilters
-                ? "max-h-24 pb-3 opacity-100"
-                : "max-h-0 md:max-h-20 opacity-0 md:opacity-100"
+                ? "max-h-32 pb-3 opacity-100"
+                : "max-h-0 md:max-h-24 opacity-0 md:opacity-100"
             )}
           >
             <div className="flex items-center gap-2 py-3 min-w-max md:min-w-0 md:flex-wrap">
-              {availableCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    setSearchQuery("");
-                    setShowFilters(false);
-                  }}
-                  className={cn(
-                    "whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-150 flex-shrink-0 border",
-                    activeCategory === cat
-                      ? "bg-[#040316] text-white border-[#040316] shadow-xs"
-                      : "bg-transparent text-[#040316]/50 border-[#040316]/10 hover:text-[#040316] hover:border-[#040316]/30 hover:bg-black/[0.02]"
-                  )}
-                >
-                  {cat}
-                </button>
-              ))}
+              {availableCategories.map((cat) => {
+                const count = categoryCounts[cat];
+                const isActive = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => {
+                      setActiveCategory(cat);
+                      setShowFilters(false);
+                    }}
+                    className={cn(
+                      "whitespace-nowrap cursor-pointer text-xs font-semibold px-3.5 py-2 rounded-xl transition-all duration-150 flex-shrink-0 flex items-center gap-2 border focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#ffeb20]",
+                      isActive
+                        ? "bg-[#040316] text-white border-[#040316] shadow-xs"
+                        : "bg-white text-[#040316]/70 border-[#040316]/10 hover:text-[#040316] hover:border-[#040316]/30 hover:bg-black/[0.02]"
+                    )}
+                  >
+                    <span>{cat}</span>
+                    {typeof count === "number" && (
+                      <span
+                        className={cn(
+                          "text-[10px] px-1.5 py-0.5 rounded-md font-mono",
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-[#040316]/5 text-[#040316]/50"
+                        )}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Search & Count Bar ── */}
+      {/* ── Search & Filter Status Bar ── */}
       <div className="container-max py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-full sm:w-80">
           <Search
-            size={14}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#040316]/30 pointer-events-none"
+            size={15}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#040316]/35 pointer-events-none"
           />
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="Search by name, category, fitment..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-9 py-2.5 text-sm border border-[#040316]/10 rounded-lg bg-transparent placeholder:text-[#040316]/30 focus:outline-none focus:border-[#040316] transition-colors"
+            className="w-full pl-9 pr-9 py-2.5 text-sm border border-[#040316]/12 rounded-xl bg-white placeholder:text-[#040316]/35 focus:outline-hidden focus:border-[#040316] focus:ring-1 focus:ring-[#040316] transition-all shadow-2xs"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#040316]/30 hover:text-[#040316] p-1 rounded-full hover:bg-black/5"
-              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#040316]/40 hover:text-[#040316] p-1 rounded-full hover:bg-black/5"
+              aria-label="Clear search query"
             >
               <X size={14} />
             </button>
           )}
         </div>
 
-        {/* Count */}
-        <p className="text-xs text-[#040316]/40 hidden sm:block">
+        {/* Status / Active Filters Indicator */}
+        <div className="flex items-center gap-3 text-xs text-[#040316]/60 w-full sm:w-auto justify-between sm:justify-end">
           {loading ? (
-            "Loading products..."
+            <span>Loading product catalog...</span>
           ) : (
-            <>
-              <span className="font-semibold text-[#040316]">
-                {filtered.length}
-              </span>{" "}
-              product{filtered.length !== 1 ? "s" : ""}
-              {activeCategory !== "All" && (
-                <>
-                  {" "}in{" "}
-                  <span className="text-[#040316] font-semibold">
-                    {activeCategory}
-                  </span>
-                </>
+            <div className="flex items-center gap-2">
+              <span>
+                Showing{" "}
+                <strong className="text-[#040316] font-bold">
+                  {filtered.length}
+                </strong>{" "}
+                of {products.length} products
+                {activeCategory !== "All" && (
+                  <>
+                    {" "}in{" "}
+                    <span className="text-[#ED3E00] font-bold">
+                      {activeCategory}
+                    </span>
+                  </>
+                )}
+              </span>
+
+              {(activeCategory !== "All" || searchQuery) && (
+                <button
+                  onClick={resetAllFilters}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#040316]/70 hover:text-[#ED3E00] ml-2 px-2 py-1 rounded-md bg-[#040316]/5 hover:bg-[#ED3E00]/10 transition-colors"
+                  title="Reset filters"
+                >
+                  <RotateCcw size={11} />
+                  <span>Clear</span>
+                </button>
               )}
-            </>
+            </div>
           )}
-        </p>
+        </div>
       </div>
 
-      {/* ── Product Grid ── */}
+      {/* ── Product Grid Section ── */}
       <div className="container-max pb-24">
         {/* Error State */}
         {error && (
-          <div className="text-center py-20">
-            <div className="text-4xl mb-4">⚠️</div>
+          <div className="text-center py-20 bg-white rounded-3xl border border-red-100 p-8 shadow-xs max-w-xl mx-auto my-8">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 text-xl">
+              ⚠️
+            </div>
             <h3 className="text-lg font-bold text-[#040316] mb-2">
-              Connection Error
+              Catalog Unavailable
             </h3>
-            <p className="text-[#040316]/50 text-sm mb-6">{error}</p>
-            <button onClick={() => void loadProducts()} className="btn-primary">
-              Try Again
+            <p className="text-[#040316]/60 text-sm mb-6 leading-relaxed">
+              {error}
+            </p>
+            <button
+              onClick={() => void loadProducts()}
+              className="btn-primary text-xs"
+            >
+              Retry Loading Catalog
             </button>
           </div>
         )}
 
         {/* Loading Skeletons */}
         {!error && loading && (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-            {Array.from({ length: 12 }).map((_, i) => (
+          <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
               <ProductSkeleton key={i} />
             ))}
           </div>
@@ -315,33 +285,37 @@ export default function ProductsClient() {
 
         {/* Empty State */}
         {!error && !loading && filtered.length === 0 && (
-          <div className="text-center py-24">
-            <div className="text-5xl mb-4">🔍</div>
+          <div className="text-center py-24 bg-white rounded-3xl border border-[#040316]/8 p-8 max-w-lg mx-auto shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-[#040316]/5 flex items-center justify-center mx-auto mb-4 text-2xl">
+              🔍
+            </div>
             <h3 className="text-xl font-bold text-[#040316] mb-2">
-              No products found
+              No matching products
             </h3>
-            <p className="text-[#040316]/50 text-sm">
+            <p className="text-[#040316]/55 text-sm max-w-sm mx-auto leading-relaxed">
               {searchQuery
-                ? `No results for "${searchQuery}" in ${activeCategory === "All" ? "all categories" : activeCategory}`
-                : `No products in the ${activeCategory} category yet.`}
+                ? `No results found for "${searchQuery}" in ${activeCategory === "All" ? "all categories" : activeCategory}.`
+                : `No products currently available in the ${activeCategory} category.`}
             </p>
             <button
-              onClick={() => {
-                setActiveCategory("All");
-                setSearchQuery("");
-              }}
-              className="btn-primary mt-6 text-sm"
+              onClick={resetAllFilters}
+              className="btn-primary mt-6 text-xs inline-flex items-center gap-1.5"
             >
-              Reset Filters
+              <RotateCcw size={13} />
+              <span>Reset Search & Filters</span>
             </button>
           </div>
         )}
 
-        {/* Products */}
+        {/* Products Grid */}
         {!error && !loading && filtered.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-            {filtered.map((product) => (
-              <ProductCard key={product.id} product={product} />
+          <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+            {filtered.map((product, idx) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                priority={idx < 4}
+              />
             ))}
           </div>
         )}

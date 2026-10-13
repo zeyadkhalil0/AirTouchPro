@@ -1,11 +1,25 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import ProductsClient from "@/components/ProductsClient";
+import { ProductSkeleton } from "@/components/ProductCard";
 
 export const metadata: Metadata = {
   title: "Products — Air Suspension Catalog",
   description:
     "Browse our complete catalog of premium air suspension systems, air bags, compressors, management systems, brake components, and more.",
 };
+
+function ProductsLoading() {
+  return (
+    <div className="container-max py-12">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <ProductSkeleton key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function ProductsPage() {
   return (
@@ -24,7 +38,9 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <ProductsClient />
+      <Suspense fallback={<ProductsLoading />}>
+        <ProductsClient />
+      </Suspense>
     </div>
   );
 }

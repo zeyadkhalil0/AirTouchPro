@@ -110,20 +110,27 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Product Categories */}
           <div>
             <h4 className="text-white font-semibold text-sm tracking-wider uppercase mb-5">
-              Support
+              Categories
             </h4>
             <ul className="space-y-3 text-sm">
               {[
-                "Installation Guide",
-                "Warranty Policy",
-                "Privacy Policy",
-                "Terms of Service",
+                { label: "Air Bags", href: "/products?category=Air+Bags" },
+                { label: "Air Managements", href: "/products?category=Air+Managements" },
+                { label: "Air Compressors", href: "/products?category=Air+Compressors" },
+                { label: "Air Tanks", href: "/products?category=Air+Tanks" },
+                { label: "Brake Systems", href: "/products?category=Brake" },
+                { label: "Struts & Arms", href: "/products?category=Struts+%26+Arms" },
               ].map((item) => (
-                <li key={item}>
-                  <span className="text-white/50 cursor-default">{item}</span>
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-white/50 hover:text-[#ffeb20] transition-colors"
+                  >
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
